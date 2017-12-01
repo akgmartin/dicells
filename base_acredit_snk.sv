@@ -18,36 +18,42 @@
  *
  * Author: Andrew K Martin akmartin@us.ibm.com
  */
-
+ 
 module base_acredit_snk#
-(
-  parameter credits     = 0,
-  parameter log_credits = $clog2(credits),
-  parameter width       = 0,
-  parameter dist_ram    = 0,
-  parameter block_ram   = 0,
-  parameter output_reg  = 1
-)
-(
-  input                 clk,
-  input                 reset,
-
-  input                 i_v,
-  input  [0:width-1]    i_d,
-  output                i_c,
-
-  input                 o_r,
-  output                o_v,
-  output [0:width-1]    o_d
-);
-
-  base_fifo#(.width(width),.LOG_DEPTH(log_credits),.DEPTH(credits),.output_reg(output_reg)) i_fifo
   (
-  .clk(clk),.reset(reset),
-  .i_r(),.i_v(i_v),.i_d(i_d),
-  .o_v(o_v),.o_r(o_r),.o_d(o_d)
-  );
+   parameter credits =  0,
+   parameter log_credits = $clog2(credits),
+   parameter width = 0,
+   parameter dist_ram=0,
+   parameter block_ram=0
+   )
+   (
+    input 	       clk,
+    input 	       reset,
+    output 	       i_c,
+    input 	       i_v,
+    input [0:width-1]  i_d,
+    
+    input 	       o_r,
+    output 	       o_v,
+    output [0:width-1] o_d
+    );
 
-  base_vlat#(.width(1)) il1(.clk(clk),.reset(reset),.din(o_v&o_r),.q(i_c));
-
+   base_fifo#(.width(width),.LOG_DEPTH(log_credits),.DEPTH(credits),.output_reg(1)) i_fifo
+     (
+      .clk(clk),.reset(reset),
+      .i_r(),.i_v(i_v),.i_d(i_d),
+      .o_v(o_v),.o_r(o_r),.o_d(o_d)
+      );
+   base_vlat#(.width(1)) il1(.clk(clk),.reset(reset),.din(o_v&o_r),.q(i_c));
 endmodule // base_acredit_snk
+
+
+    
+   
+					
+   
+
+
+   
+  
