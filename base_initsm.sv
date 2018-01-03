@@ -18,37 +18,38 @@
  *
  * Author: Andrew K Martin akmartin@us.ibm.com
  */
- 
+
 module base_initsm#
-  (
-   parameter LOG_COUNT = 1,
-   parameter COUNT = 2 ** LOG_COUNT
-   )
-   (
-    input 		   clk,
-    input 		   reset,
-    output 		   dout_v,
-    output [0:LOG_COUNT-1] dout_d,
-    input 		   dout_r
-    );
-   
-   wire [0:LOG_COUNT-1] count_in,count;
-   wire 		act_in,act;
+(
+  parameter LOG_COUNT     = 1,
+  parameter COUNT         = 2 ** LOG_COUNT
+)
+(
+  input                   clk,
+  input                   reset,
+  output                  dout_v,
+  output [0:LOG_COUNT-1]  dout_d,
+  input                   dout_r,
+  output                  o_zero
+);
 
-   assign act_in = !(count == 0);
-   assign count_in = act_in ? count-{{LOG_COUNT-1{1'b0}},1'b1} : {LOG_COUNT{1'b0}};
+  wire [0:LOG_COUNT-1] count_in, count;
+  wire act_in, act;
 
-   wire 		s1_v, s1_r;
+  assign act_in = !(count == 0);
+  assign count_in = act_in ? count-{{LOG_COUNT-1{1'b0}},1'b1} : {LOG_COUNT{1'b0}};
 
-   base_alatch#(.width(LOG_COUNT)) is2_lat(.clk(clk),.reset(reset),.i_v(s1_v),.i_r(s1_r),.o_v(dout_v),.o_r(dout_r),.i_d(count),.o_d(dout_d));
-   
-   wire 		en = ~s1_v | s1_r;
-   
-   base_vlat_en#(.width(LOG_COUNT),.rstv(COUNT-1)) countl(.clk(clk), .reset(reset), .enable(en),.din(count_in), .q(count));
-   base_vlat_en#(.width(1),.rstv(1'b1))              actl(.clk(clk), .reset(reset), .enable(en),.din(act_in), .q(s1_v));
+  wire s1_v, s1_r;
 
-   
+  base_alatch#(.width(LOG_COUNT)) is2_lat(.clk(clk),.reset(reset),.i_v(s1_v),.i_r(s1_r),.o_v(dout_v),.o_r(dout_r),.i_d(count),.o_d(dout_d));
+
+  wire en = ~s1_v | s1_r;
+
+  base_vlat_en#(.width(LOG_COUNT),.rstv(COUNT-1)) countl(.clk(clk),.reset(reset),.enable(en),.din(count_in),.q(count));
+  base_vlat_en#(.width(1),.rstv(1'b1)) actl(.clk(clk),.reset(reset),.enable(en),.din(act_in), .q(s1_v));
+
+  // Output to indicate the end of the initialization.
+  wire zero = (dout_d == 0);
+  base_vlat_en#(.width(1),.rstv(1'b0)) zero_vlat (.clk(clk),.reset(reset),.enable(zero),.din(1'b1),.q(o_zero));
+
 endmodule
- 
-   
-   
